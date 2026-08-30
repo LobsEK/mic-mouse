@@ -1,0 +1,39 @@
+=== POSLEDNE NASADENIA ===
+BLOCKED  mic-mouse-lmtx1pwra-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-kr3v439mu-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-qct9pkew8-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-oz8skamce-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-88jg7759o-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-2e41h753z-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-ritupcsg4-lobseks-projects.vercel.app
+BLOCKED  mic-mouse-na7yk7021-lobseks-projects.vercel.app
+
+=== DETAIL POSLEDNEHO ===
+deployment: mic-mouse-lmtx1pwra-lobseks-projects.vercel.app
+{
+  "readyState": "BLOCKED",
+  "readyStateReason": "Git author lubos@instaview.sk must have access to the team lobsek's projects on Vercel to create deployments.",
+  "errorCode": null,
+  "errorMessage": null,
+  "errorStep": null,
+  "buildErrorAt": null
+}
+
+=== UCET ===
+{
+  "username": "lobsek",
+  "email": "lubosrepka16@gmail.com",
+  "version": "northstar",
+  "blocked": null,
+  "softBlock": null,
+  "billingPlan": null
+}
+
+=== TIM ===
+{
+  "slug": "lobseks-projects",
+  "name": "lobsek's projects",
+  "blocked": null,
+  "softBlock": null,
+  "plan": "hobby"
+}
