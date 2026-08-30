@@ -1,9 +1,6 @@
-adresa nasadenia: https://mic-mouse-lmtx1pwra-lobseks-projects.vercel.app
+adresa nasadenia: https://mic-mouse-6ves0azr8-lobseks-projects.vercel.app
 stabilna adresa:  https://mic-mouse-lobseks-projects.vercel.app
-stav buildu:      BLOCKED
-cas:              2026-08-30 21:04 UTC
+stav buildu:      READY
+cas:              2026-08-30 21:10 UTC
 
---- co povedal build ---
-Vercel CLI 59.10.0 (Node.js 22.23.2)
-Fetching deployment "mic-mouse-lmtx1pwra-lobseks-projects.vercel.app" in lobseks-projects
-status	UNKNOWN
+--- kontrola stranky ---
