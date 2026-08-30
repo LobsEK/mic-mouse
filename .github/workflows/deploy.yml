@@ -27,22 +27,32 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          set +e
-          timeout 720 vercel deploy --prod --yes --token "$VERCEL_TOKEN" \
+          set -e
+          # --no-wait: nechaj build bezat na Verceli a neblokuj tu
+          URL=$(vercel deploy --prod --yes --no-wait --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --build-env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
             --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" > out.txt 2> err.txt
-          CODE=$?
-          set -e
+            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" 2>/dev/null | tail -1)
+          echo "Adresa: $URL"
+
+          # Pockaj, kym prihlasovacia stranka naozaj zacne odpovedat
+          STAV="neodpoveda"
+          for i in $(seq 1 40); do
+            sleep 15
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 -L "$URL/login" || echo 000)
+            echo "pokus $i: $CODE"
+            if [ "$CODE" = "200" ]; then STAV="funguje"; break; fi
+            if [ "$CODE" = "404" ] || [ "$CODE" = "500" ]; then STAV="build zlyhal ($CODE)"; break; fi
+          done
+
           {
-            echo "navratovy kod: $CODE"
-            echo "--- vystup ---"
-            tail -c 1500 out.txt
-            echo "--- chybovy vypis (koniec) ---"
-            tail -c 5000 err.txt
+            echo "$URL"
+            echo "stav prihlasovacej stranky: $STAV"
+            echo "posledna odpoved: $CODE"
+            echo "aktualizovane: $(date -u '+%Y-%m-%d %H:%M UTC')"
           } > DEPLOY_URL.txt
           cat DEPLOY_URL.txt
 

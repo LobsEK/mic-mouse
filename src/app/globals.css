@@ -918,6 +918,7 @@ body.rail-off #railOpen{display:inline-flex}
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 13 4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 13 4 4L19 7'/%3E%3C/svg%3E") center/contain no-repeat;
 }
+.auth-lead{font-size:15.5px;line-height:1.62;margin:30px 0 0;max-width:46ch;color:#5a2c0b;font-weight:520}
 .auth-claim{font-size:15px;line-height:1.6;margin:0 0 22px;max-width:52ch;color:#4a2409}
 .auth-facts{display:flex;flex-wrap:wrap;gap:8px}
 .auth-facts span{
@@ -928,7 +929,7 @@ body.rail-off #railOpen{display:inline-flex}
 
 .auth-form-side{display:grid;place-items:center;padding:40px 28px;background:#fff}
 .auth-card{width:100%;max-width:352px;display:flex;flex-direction:column}
-.auth-logo{width:46px;height:46px;border-radius:13px;background:var(--ink);display:grid;place-items:center;margin:0 auto 26px}
+.auth-orb{display:flex;justify-content:center;margin:0 0 24px}
 .auth-title{font-size:22px;font-weight:780;letter-spacing:-.03em;text-align:center;margin:0}
 .auth-sub{font-size:13.5px;color:var(--ink-3);text-align:center;margin:7px 0 26px}
 .auth-field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px}

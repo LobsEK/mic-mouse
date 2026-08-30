@@ -16,6 +16,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             <li>Po každom kroku navrhne dva ďalšie</li>
             <li>Pri každom kroku vieš, čo stál</li>
           </ul>
+
+          <p className="auth-lead">
+            Agent, ktorý robí marketing za teba: sleduje kampane, drží čísla pokope
+            a pripraví ti ich tak, aby si sa vedel rozhodnúť. Všetko na jednom mieste —
+            nestrácaš pozornosť prepínaním medzi nástrojmi.
+          </p>
         </div>
 
         <div className="auth-pitch-foot">

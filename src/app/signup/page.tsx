@@ -4,16 +4,15 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { signup } from "@/app/actions/auth";
 import AuthLayout from "@/components/auth/AuthLayout";
+import ApolloOrb from "@/components/ApolloOrb";
 
 export default function SignupPage() {
   const [state, formAction, pending] = useActionState(signup, undefined);
 
   return (
     <AuthLayout>
-      <div className="auth-logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff6a1f">
-          <path d="M13 2 4 13h6l-1 9 9-11h-6z" />
-        </svg>
+      <div className="auth-orb">
+        <ApolloOrb size={58} state="idle" />
       </div>
 
       <h1 className="auth-title">Vytvor si účet</h1>
