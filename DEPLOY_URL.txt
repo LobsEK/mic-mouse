@@ -1,7 +1,7 @@
-adresa nasadenia: https://mic-mouse-himngfqsy-lobseks-projects.vercel.app
+adresa nasadenia: https://mic-mouse-64pees028-lobseks-projects.vercel.app
 stabilna adresa:  https://mic-mouse-lobseks-projects.vercel.app
 stav buildu:      READY
-cas:              2026-08-30 21:15 UTC
+cas:              2026-08-30 21:37 UTC
 
 --- kontrola stranky ---
 Prihlás sa do Mic Mouse
