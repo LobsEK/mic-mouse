@@ -28,7 +28,6 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -e
-          # --no-wait: nechaj build bezat na Verceli a neblokuj tu
           URL=$(vercel deploy --prod --yes --no-wait --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
@@ -38,22 +37,28 @@ jobs:
             --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" 2>/dev/null | tail -1)
           echo "Adresa: $URL"
 
-          # Pockaj, kym prihlasovacia stranka naozaj zacne odpovedat
-          STAV="neodpoveda"
+          # Cakaj na skutocny obsah prihlasovacej stranky, nie len na kod 200.
+          # Vercel totiz vracia 200 aj pre stranku "Deployment is blocked".
+          STAV="cakanie vyprsalo"
           for i in $(seq 1 40); do
             sleep 15
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 20 -L "$URL/login" || echo 000)
-            echo "pokus $i: $CODE"
-            if [ "$CODE" = "200" ]; then STAV="funguje"; break; fi
-            if [ "$CODE" = "404" ] || [ "$CODE" = "500" ]; then STAV="build zlyhal ($CODE)"; break; fi
+            BODY=$(curl -s --max-time 20 -L "$URL/login" || echo "")
+            if echo "$BODY" | grep -q "Prihlás sa do Mic Mouse"; then STAV="funguje"; break; fi
+            if echo "$BODY" | grep -qi "Deployment is blocked\|DEPLOYMENT_NOT_FOUND"; then STAV="build zlyhal"; break; fi
+            echo "pokus $i: este sa buduje"
           done
+          echo "stav: $STAV"
 
           {
             echo "$URL"
-            echo "stav prihlasovacej stranky: $STAV"
-            echo "posledna odpoved: $CODE"
-            echo "aktualizovane: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "stav: $STAV"
+            echo "cas: $(date -u '+%Y-%m-%d %H:%M UTC')"
           } > DEPLOY_URL.txt
+
+          if [ "$STAV" != "funguje" ]; then
+            echo "--- build log ---" >> DEPLOY_URL.txt
+            vercel inspect "$URL" --logs --token "$VERCEL_TOKEN" 2>&1 | tail -c 6000 >> DEPLOY_URL.txt || true
+          fi
           cat DEPLOY_URL.txt
 
       - name: Zapis vysledok do repa

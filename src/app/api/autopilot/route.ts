@@ -6,7 +6,9 @@ import { formatEur } from "@/lib/agents/costs";
 import type { AgentFull, TaskProposal } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+// Vercel Hobby allows at most 60s per function. One autopilot step fits well
+// inside that; the browser drives the chain by calling this repeatedly.
+export const maxDuration = 60;
 
 /**
  * ONE autopilot step per call. The browser calls this in a loop, so the chain
