@@ -12,42 +12,46 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - run: npm install --global vercel@latest
 
       - name: Deploy
-        id: deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          set -e
-          URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" \
-            --name mic-mouse \
+          set +e
+          timeout 720 vercel deploy --prod --yes --token "$VERCEL_TOKEN" \
             --build-env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --build-env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
             --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" 2>/dev/null | tail -1)
-          echo "$URL" > DEPLOY_URL.txt
-          echo "Adresa: $URL"
-          # Over, ze appka odpoveda (s tvrdym limitom, nech to nikdy nevisi)
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 -L "$URL/login" || echo "000")
-          echo "odpoved /login: $CODE" >> DEPLOY_URL.txt
+            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" > out.txt 2> err.txt
+          CODE=$?
+          set -e
+          {
+            echo "navratovy kod: $CODE"
+            echo "--- vystup ---"
+            tail -c 1500 out.txt
+            echo "--- chybovy vypis (koniec) ---"
+            tail -c 5000 err.txt
+          } > DEPLOY_URL.txt
+          cat DEPLOY_URL.txt
 
-      - name: Zapis adresu do repa
+      - name: Zapis vysledok do repa
+        if: always()
         run: |
           git config user.name "deploy bot"
           git config user.email "deploy@instaview.sk"
-          git add DEPLOY_URL.txt
-          git commit -m "Deployment URL" || exit 0
+          git add DEPLOY_URL.txt || true
+          git commit -m "Vysledok nasadenia" || exit 0
+          git pull --rebase || true
           git push
