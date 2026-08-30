@@ -1,10 +1,13 @@
 name: Deploy to Vercel
 
-# Deploys from GitHub's runners, which can reach Vercel.
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore: ['DEPLOY_URL.txt']
+
+permissions:
+  contents: write
 
 jobs:
   deploy:
@@ -16,10 +19,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+      - run: npm install --global vercel@latest
 
       - name: Deploy
+        id: deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -27,15 +30,25 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           set -e
-          vercel deploy --prod --yes --token "$VERCEL_TOKEN" \
+          URL=$(vercel deploy --prod --yes --token "$VERCEL_TOKEN" \
             --name mic-mouse \
             --build-env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --build-env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
             --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
-            > deployment-url.txt 2>deploy-log.txt || { cat deploy-log.txt; exit 1; }
-          echo "===== ADRESA APLIKACIE ====="
-          cat deployment-url.txt
-          echo "==========================="
+            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY")
+          echo "$URL" > DEPLOY_URL.txt
+          echo "Adresa: $URL"
+          # Zisti, ci appka naozaj odpoveda
+          sleep 5
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "$URL/login" || echo "000")
+          echo "Odpoved /login: $CODE" >> DEPLOY_URL.txt
+
+      - name: Zapis adresu do repa
+        run: |
+          git config user.name "deploy bot"
+          git config user.email "deploy@instaview.sk"
+          git add DEPLOY_URL.txt
+          git commit -m "Deployment URL" || exit 0
+          git push
