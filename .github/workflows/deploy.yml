@@ -12,29 +12,23 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 22
+        with: { node-version: 22 }
       - run: npm install --global vercel@latest
 
       - name: Sprístupni appku verejnosti
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          # Vercel na novych projektoch zapina ochranu, ktora poziada navstevnika
-          # o prihlasenie do Vercelu. Appka ma byt otvorena pre kohokolvek, tak ju vypneme.
-          curl -s -X PATCH \
-            "https://api.vercel.com/v9/projects/mic-mouse?slug=lobseks-projects" \
-            -H "Authorization: Bearer $VERCEL_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d '{"ssoProtection": null, "passwordProtection": null}' \
-            -o ochrana.json -w "stav: %{http_code}\n"
-          head -c 400 ochrana.json; echo
+          curl -s -X PATCH "https://api.vercel.com/v9/projects/mic-mouse?slug=lobseks-projects" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+            -d '{"ssoProtection": null, "passwordProtection": null}' -o /dev/null -w "ochrana: %{http_code}\n"
 
-      - name: Deploy
+      - name: Deploy a sleduj build
+        id: dep
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -49,38 +43,53 @@ jobs:
             --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
             --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" 2>/dev/null | tail -1)
-          echo "Adresa: $URL"
+          HOST=${URL#https://}
+          echo "adresa: $URL"
 
-          # Cakaj na skutocny obsah prihlasovacej stranky, nie len na kod 200.
-          # Vercel totiz vracia 200 aj pre stranku "Deployment is blocked".
-          STAV="cakanie vyprsalo"
-          for i in $(seq 1 40); do
+          STATE="?"
+          for i in $(seq 1 60); do
             sleep 15
-            BODY=$(curl -s --max-time 20 -L "$URL/login" || echo "")
-            if echo "$BODY" | grep -q "Prihlás sa do Mic Mouse"; then STAV="funguje"; break; fi
-            if echo "$BODY" | grep -qi "Deployment is blocked\|DEPLOYMENT_NOT_FOUND"; then STAV="build zlyhal"; break; fi
-            echo "pokus $i: este sa buduje"
+            STATE=$(curl -s --max-time 20 \
+              "https://api.vercel.com/v13/deployments/$HOST?slug=lobseks-projects" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              | python3 -c "import sys,json;print(json.load(sys.stdin).get('readyState','?'))" 2>/dev/null || echo "?")
+            echo "$i: $STATE"
+            [ "$STATE" = "READY" ] && break
+            [ "$STATE" = "ERROR" ] && break
+            [ "$STATE" = "CANCELED" ] && break
           done
-          echo "stav: $STAV"
 
           {
-            echo "$URL"
-            echo "stav: $STAV"
-            echo "cas: $(date -u '+%Y-%m-%d %H:%M UTC')"
-          } > DEPLOY_URL.txt
+            echo "adresa nasadenia: $URL"
+            echo "stabilna adresa:  https://mic-mouse-lobseks-projects.vercel.app"
+            echo "stav buildu:      $STATE"
+            echo "cas:              $(date -u '+%Y-%m-%d %H:%M UTC')"
+          } > vysledok.txt
 
-          if [ "$STAV" != "funguje" ]; then
-            echo "--- build log ---" >> DEPLOY_URL.txt
-            vercel inspect "$URL" --logs --token "$VERCEL_TOKEN" 2>&1 | tail -c 6000 >> DEPLOY_URL.txt || true
+          if [ "$STATE" != "READY" ]; then
+            echo "" >> vysledok.txt
+            echo "--- co povedal build ---" >> vysledok.txt
+            vercel inspect "$URL" --logs --token "$VERCEL_TOKEN" 2>&1 | tail -c 5000 >> vysledok.txt || true
+          else
+            echo "" >> vysledok.txt
+            echo "--- kontrola stranky ---" >> vysledok.txt
+            curl -s --max-time 25 -L "https://mic-mouse-lobseks-projects.vercel.app/login" \
+              | grep -o "Prihlás sa do Mic Mouse" | head -1 >> vysledok.txt || echo "(novy nadpis sa nenasiel)" >> vysledok.txt
           fi
-          cat DEPLOY_URL.txt
+          cat vysledok.txt
 
-      - name: Zapis vysledok do repa
+      - name: Zapis vysledok cez GitHub API
         if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "deploy bot"
-          git config user.email "deploy@instaview.sk"
-          git add DEPLOY_URL.txt || true
-          git commit -m "Vysledok nasadenia" || exit 0
-          git pull --rebase || true
-          git push
+          # Cez API, aby to nepadalo na konfliktoch v gite
+          SHA=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/DEPLOY_URL.txt" \
+            | python3 -c "import sys,json;print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || echo "")
+          CONTENT=$(base64 -w0 vysledok.txt 2>/dev/null || base64 vysledok.txt | tr -d '\n')
+          if [ -n "$SHA" ]; then EXTRA=",\"sha\":\"$SHA\""; else EXTRA=""; fi
+          curl -s -X PUT -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/DEPLOY_URL.txt" \
+            -d "{\"message\":\"Vysledok nasadenia\",\"content\":\"$CONTENT\"$EXTRA}" \
+            -o /dev/null -w "zapis: %{http_code}\n"
