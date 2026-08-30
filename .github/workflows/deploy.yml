@@ -37,13 +37,12 @@ jobs:
             --build-env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
             --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
-            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY")
+            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" 2>/dev/null | tail -1)
           echo "$URL" > DEPLOY_URL.txt
           echo "Adresa: $URL"
-          # Zisti, ci appka naozaj odpoveda
-          sleep 5
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" -L "$URL/login" || echo "000")
-          echo "Odpoved /login: $CODE" >> DEPLOY_URL.txt
+          # Over, ze appka odpoveda (s tvrdym limitom, nech to nikdy nevisi)
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 -L "$URL/login" || echo "000")
+          echo "odpoved /login: $CODE" >> DEPLOY_URL.txt
 
       - name: Zapis adresu do repa
         run: |
