@@ -20,6 +20,20 @@ jobs:
           node-version: 22
       - run: npm install --global vercel@latest
 
+      - name: Sprístupni appku verejnosti
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          # Vercel na novych projektoch zapina ochranu, ktora poziada navstevnika
+          # o prihlasenie do Vercelu. Appka ma byt otvorena pre kohokolvek, tak ju vypneme.
+          curl -s -X PATCH \
+            "https://api.vercel.com/v9/projects/mic-mouse?slug=lobseks-projects" \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"ssoProtection": null, "passwordProtection": null}' \
+            -o ochrana.json -w "stav: %{http_code}\n"
+          head -c 400 ochrana.json; echo
+
       - name: Deploy
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
