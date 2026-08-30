@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths-ignore: ['DEPLOY_URL.txt']
+    paths-ignore: ['DEPLOY_URL.txt', 'DIAG.txt', '.github/workflows/diag.yml']
 
 permissions:
   contents: write

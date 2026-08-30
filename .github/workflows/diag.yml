@@ -1,0 +1,59 @@
+name: Diagnostika Vercelu
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Zisti stav uctu a nasadeni
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          A="Authorization: Bearer $VERCEL_TOKEN"
+          {
+            echo "=== POSLEDNE NASADENIA ==="
+            curl -s -H "$A" "https://api.vercel.com/v6/deployments?slug=lobseks-projects&limit=6" \
+              | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for x in d.get('deployments',[]):
+    print(x.get('readyState'), '|', x.get('url'), '|', x.get('name'))
+    if x.get('readyStateReason'): print('   dovod:', x['readyStateReason'])
+"
+            echo
+            echo "=== DETAIL POSLEDNEHO ==="
+            LAST=$(curl -s -H "$A" "https://api.vercel.com/v6/deployments?slug=lobseks-projects&limit=1" \
+              | python3 -c "import sys,json;print(json.load(sys.stdin)['deployments'][0]['url'])")
+            curl -s -H "$A" "https://api.vercel.com/v13/deployments/$LAST?slug=lobseks-projects" \
+              | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for k in ['readyState','readyStateReason','errorCode','errorMessage','errorStep','name','url']:
+    if d.get(k) is not None: print(k,'=',d[k])
+"
+            echo
+            echo "=== UCET ==="
+            curl -s -H "$A" "https://api.vercel.com/v2/user" \
+              | python3 -c "
+import sys,json
+d=json.load(sys.stdin).get('user',{})
+for k in ['username','email','version','billing','blocked','softBlock','stagingPrefix']:
+    if d.get(k) is not None: print(k,'=',json.dumps(d[k])[:400])
+"
+          } > vysledok.txt 2>&1
+          cat vysledok.txt
+          SHA=$(curl -s -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/DIAG.txt" \
+            | python3 -c "import sys,json;print(json.load(sys.stdin).get('sha',''))" 2>/dev/null || echo "")
+          C=$(base64 -w0 vysledok.txt)
+          if [ -n "$SHA" ]; then E=",\"sha\":\"$SHA\""; else E=""; fi
+          curl -s -X PUT -H "Authorization: Bearer $GH_TOKEN" \
+            "https://api.github.com/repos/${{ github.repository }}/contents/DIAG.txt" \
+            -d "{\"message\":\"Diagnostika\",\"content\":\"$C\"$E}" -o /dev/null -w "zapis: %{http_code}\n"
