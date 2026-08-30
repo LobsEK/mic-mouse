@@ -1,0 +1,24 @@
+navratovy kod: 124
+--- vystup ---
+https://mic-mouse-2e41h753z-lobseks-projects.vercel.app--- chybovy vypis (koniec) ---
+Vercel CLI 59.10.0 (Node.js 22.23.2)
+> NOTE: The Vercel CLI now collects telemetry regarding usage of the CLI.
+> This information is used to shape the CLI roadmap and prioritize features.
+> You can learn more, including how to opt-out if you'd not like to participate in this program, by visiting the following URL:
+> https://vercel.com/docs/cli/about-telemetry
+Loading teams…
+
+  Directory       ~/work/mic-mouse/mic-mouse
+
+Searching for existing projects…
+
+✓ Linked          lobseks-projects/mic-mouse
+Deploying lobseks-projects/mic-mouse
+Uploading [--------------------] (0.0B/68.5KB)
+Uploading [======--------------] (21.4KB/68.5KB)
+Uploading [==========----------] (37.4KB/68.5KB)
+Uploading [===============-----] (53.4KB/68.5KB)
+Uploading [====================] (68.5KB/68.5KB)
+  Inspect         https://vercel.com/lobseks-projects/mic-mouse/G6oDWBw83WeBhoKWw5twEsc8bQnr
+  Production      https://mic-mouse-2e41h753z-lobseks-projects.vercel.app
+Building…
