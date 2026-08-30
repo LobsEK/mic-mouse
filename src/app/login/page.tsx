@@ -1,13 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/app/actions/auth";
 import AuthLayout from "@/components/auth/AuthLayout";
 import ApolloOrb from "@/components/ApolloOrb";
 
-export default function LoginPage() {
+function LoginForm() {
   const [state, formAction, pending] = useActionState(login, undefined);
+  const linkError = useSearchParams().get("error");
 
   return (
     <AuthLayout>
@@ -19,9 +21,9 @@ export default function LoginPage() {
       <p className="auth-sub">Vitaj späť.</p>
 
       <form action={formAction}>
-        {state?.error && (
+        {(state?.error || linkError) && (
           <div className="auth-error">
-            <span>{state.error}</span>
+            <span>{state?.error ?? linkError}</span>
           </div>
         )}
 
@@ -46,5 +48,13 @@ export default function LoginPage() {
         Nemáš účet? <Link href="/signup">Vytvor si ho</Link>
       </p>
     </AuthLayout>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
   );
 }

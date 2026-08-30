@@ -98,5 +98,3 @@ Tento zoznam je v appke v Settings a agent sa ním riadi. Preto ti povie „prip
 - **Apollo** — hlásenie stavu + reálne akcie cez Claude tool-use.
 
 Bez napojených kanálov appka nič nepredstiera — presne to je zámer.
-
-<!-- nasadzuje sa cez GitHub Actions -->

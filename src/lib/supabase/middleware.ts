@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseConfigured } from "@/lib/config";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/setup", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/signup", "/setup", "/auth"];
 
 export async function updateSession(request: NextRequest) {
   // Not configured yet: send everyone to the setup instructions instead of a 500.
