@@ -1,0 +1,41 @@
+name: Deploy to Vercel
+
+# Deploys from GitHub's runners, which can reach Vercel.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          set -e
+          vercel deploy --prod --yes --token "$VERCEL_TOKEN" \
+            --name mic-mouse \
+            --build-env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+            --build-env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --build-env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+            --env NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+            --env NEXT_PUBLIC_SUPABASE_ANON_KEY="$SUPABASE_ANON_KEY" \
+            --env ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
+            > deployment-url.txt 2>deploy-log.txt || { cat deploy-log.txt; exit 1; }
+          echo "===== ADRESA APLIKACIE ====="
+          cat deployment-url.txt
+          echo "==========================="
