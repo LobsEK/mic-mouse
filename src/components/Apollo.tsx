@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import ApolloOrb, { type OrbState } from "@/components/ApolloOrb";
+import ApolloComposer from "@/components/ApolloComposer";
 import { getBriefing, type BriefingResult } from "@/app/actions/briefing";
 import { markEventsSeen } from "@/app/actions/engine";
 import type { AgentEvent, ChatMessage } from "@/lib/types";
@@ -109,7 +110,7 @@ export default function Apollo({
             </div>
           )}
           <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button className="btn-primary" style={{ fontSize: 12 }} onClick={() => { onGoToAgents(); setDismissed(true); }}>
+            <button className="btn-primary btn-inline" style={{ fontSize: 12 }} onClick={() => { onGoToAgents(); setDismissed(true); }}>
               Ukáž agentov
             </button>
             <button className="ghost" style={{ fontSize: 12 }} onClick={() => setOpen(true)}>Otvoriť Apolla</button>
@@ -183,15 +184,12 @@ export default function Apollo({
             )}
           </div>
 
-          <div style={{ display: "flex", gap: 8, padding: 12, borderTop: "1px solid var(--line)" }}>
-            <textarea
-              value={input} onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              rows={1} placeholder="Napíš Apollovi…"
-              style={{ flex: 1, resize: "none", border: "1px solid #e2e5ea", borderRadius: 10, padding: "8px 10px", fontSize: 13.2 }}
-            />
-            <button className="btn-primary" onClick={send} disabled={sending || !input.trim()}>Poslať</button>
-          </div>
+          <ApolloComposer
+            value={input}
+            onChange={setInput}
+            onSend={send}
+            sending={sending}
+          />
         </div>
       )}
     </>
